@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEP 달성 현황 대시보드</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #fafaf9;
+            padding: 2rem;
+            color: #1a1a1a;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 2rem;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 2rem;
+        }
+        
+        .metric-card {
+            background: #f5f5f4;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        
+        .metric-label {
+            font-size: 13px;
+            color: #737373;
+            margin-bottom: 4px;
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: 500;
+        }
+        
+        .progress-section {
+            margin-bottom: 2rem;
+        }
+        
+        .progress-label {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .progress-bar-container {
+            background: #e7e5e4;
+            border-radius: 999px;
+            height: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            background: #10b981;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 999px;
+        }
+        
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .incentive-card {
+            background: #dbeafe;
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 2rem;
+        }
+        
+        .incentive-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1e40af;
+            margin-bottom: 4px;
+        }
+        
+        .incentive-value {
+            font-size: 28px;
+            font-weight: 500;
+            color: #1e40af;
+        }
+        
+        .incentive-note {
+            font-size: 12px;
+            color: #1e40af;
+            margin-top: 4px;
+            opacity: 0.8;
+        }
+        
+        .input-card {
+            background: white;
+            border-radius: 12px;
+            border: 0.5px solid #e5e5e5;
+            padding: 1rem 1.25rem;
+            margin-bottom: 2rem;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+        
+        .year-section {
+            margin-bottom: 1.5rem;
+        }
+        
+        .year-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .month-inputs {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .month-row {
+            display: grid;
+            grid-template-columns: 60px 1fr 1fr 1fr 80px;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .header-row {
+            display: grid;
+            grid-template-columns: 60px 1fr 1fr 1fr 80px;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        
+        .header-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #404040;
+            text-align: center;
+        }
+        
+        .month-label {
+            font-size: 13px;
+            color: #737373;
+        }
+        
+        input[type="text"] {
+            font-size: 13px;
+            padding: 8px;
+            border: 0.5px solid #d4d4d4;
+            border-radius: 6px;
+            background: white;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        
+        input[type="text"]:read-only {
+            background: #f5f5f4;
+            color: #737373;
+            cursor: not-allowed;
+            border-color: #e5e5e5;
+        }
+        
+        .profit-value {
+            font-size: 13px;
+            padding: 8px;
+            text-align: right;
+            font-weight: 500;
+            border-radius: 6px;
+        }
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .checkbox-container input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        button {
+            width: 100%;
+            padding: 10px;
+            background: white;
+            border: 0.5px solid #d4d4d4;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        
+        button:hover {
+            background: #f5f5f4;
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 320px;
+            margin-top: 2rem;
+        }
+        
+        .success {
+            color: #10b981;
+        }
+        
+        .danger {
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BEP 달성 현황 대시보드 (25년 7월 - 26년 6월)</h1>
+        
+        <div class="metrics">
+            <div class="metric-card">
+                <div class="metric-label">총 매출</div>
+                <div class="metric-value" id="total-revenue">0원</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">총 판관비</div>
+                <div class="metric-value" id="total-cost">0원</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">현재 영업손익</div>
+                <div class="metric-value" id="current-profit">0원</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">BEP까지 필요 매출</div>
+                <div class="metric-value danger" id="needed-revenue">계산 중</div>
+            </div>
+        </div>
+        
+        <div class="progress-section">
+            <div class="progress-label">BEP 달성률</div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar"></div>
+                <div class="progress-text" id="progress-text">0%</div>
+            </div>
+        </div>
+        
+        <div class="incentive-card">
+            <div class="incentive-label">예상 인센티브</div>
+            <div class="incentive-value" id="incentive">0원</div>
+            <div class="incentive-note">BEP 초과 금액의 50%</div>
+        </div>
+        
+        <div class="input-card">
+            <div class="section-title">월별 데이터 입력</div>
+            
+            <div class="year-section">
+                <div class="year-title">2025년 (7-12월)</div>
+                <div class="header-row">
+                    <div class="month-label"></div>
+                    <div class="header-label">총매출</div>
+                    <div class="header-label">판관비</div>
+                    <div class="header-label">영업이익</div>
+                    <div class="header-label">확정</div>
+                </div>
+                <div class="month-inputs" id="months-2025"></div>
+            </div>
+            
+            <div class="year-section">
+                <div class="year-title">2026년 (1-6월)</div>
+                <div class="header-row">
+                    <div class="month-label"></div>
+                    <div class="header-label">총매출</div>
+                    <div class="header-label">판관비</div>
+                    <div class="header-label">영업이익</div>
+                    <div class="header-label">확정</div>
+                </div>
+                <div class="month-inputs" id="months-2026"></div>
+            </div>
+            
+            <button onclick="resetData()">데이터 초기화</button>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="chart"></canvas>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <script>
+        const months = [
+            { year: 2025, month: 7, label: '7월', container: 'months-2025' },
+            { year: 2025, month: 8, label: '8월', container: 'months-2025' },
+            { year: 2025, month: 9, label: '9월', container: 'months-2025' },
+            { year: 2025, month: 10, label: '10월', container: 'months-2025' },
+            { year: 2025, month: 11, label: '11월', container: 'months-2025' },
+            { year: 2025, month: 12, label: '12월', container: 'months-2025' },
+            { year: 2026, month: 1, label: '1월', container: 'months-2026' },
+            { year: 2026, month: 2, label: '2월', container: 'months-2026' },
+            { year: 2026, month: 3, label: '3월', container: 'months-2026' },
+            { year: 2026, month: 4, label: '4월', container: 'months-2026' },
+            { year: 2026, month: 5, label: '5월', container: 'months-2026' },
+            { year: 2026, month: 6, label: '6월', container: 'months-2026' }
+        ];
+
+        // 현재 데이터 저장용 객체
+        let currentData = {
+            '2025-7': { revenue: 103941984, cost: 114871163, confirmed: false },
+            '2025-8': { revenue: 50202891, cost: 75095550, confirmed: false },
+            '2025-9': { revenue: 64784907, cost: 99138528, confirmed: false },
+            '2025-10': { revenue: 43470318, cost: 100826960, confirmed: false },
+            '2025-11': { revenue: 48045492, cost: 84081034, confirmed: false },
+            '2025-12': { revenue: 77918502, cost: 107175048, confirmed: false },
+            '2026-1': { revenue: 71832764, cost: 83286048, confirmed: false },
+            '2026-2': { revenue: 89046500, cost: 81573797, confirmed: false },
+            '2026-3': { revenue: 209948549, cost: 88190282, confirmed: false },
+            '2026-4': { revenue: 0, cost: 0, confirmed: false },
+            '2026-5': { revenue: 0, cost: 0, confirmed: false },
+            '2026-6': { revenue: 0, cost: 0, confirmed: false }
+        };
+
+        function formatNumber(num) {
+            return Math.round(num).toLocaleString('ko-KR');
+        }
+        
+        function parseFormattedNumber(str) {
+            if (!str) return 0;
+            return parseInt(str.replace(/,/g, '')) || 0;
+        }
+        
+        function formatInput(input) {
+            const value = parseFormattedNumber(input.value);
+            if (value > 0) {
+                input.value = formatNumber(value);
+            }
+        }
+
+        function saveData() {
+            months.forEach(m => {
+                const key = `${m.year}-${m.month}`;
+                currentData[key] = {
+                    revenue: parseFormattedNumber(document.getElementById(`revenue-${key}`).value),
+                    cost: parseFormattedNumber(document.getElementById(`cost-${key}`).value),
+                    confirmed: document.getElementById(`confirmed-${key}`).checked
+                };
+            });
+            
+            // localStorage도 시도 (작동하면 좋고, 안 되도 괜찮음)
+            try {
+                localStorage.setItem('bepData', JSON.stringify(currentData));
+            } catch(e) {
+                console.log('localStorage 사용 불가');
+            }
+        }
+
+        function loadData() {
+            // localStorage 먼저 시도
+            try {
+                const saved = localStorage.getItem('bepData');
+                if (saved) {
+                    currentData = JSON.parse(saved);
+                }
+            } catch(e) {
+                console.log('localStorage에서 로드 실패, 기본값 사용');
+            }
+            
+            months.forEach(m => {
+                const key = `${m.year}-${m.month}`;
+                const monthData = currentData[key];
+                
+                document.getElementById(`revenue-${key}`).value = monthData.revenue > 0 ? formatNumber(monthData.revenue) : '';
+                document.getElementById(`cost-${key}`).value = monthData.cost > 0 ? formatNumber(monthData.cost) : '';
+                document.getElementById(`confirmed-${key}`).checked = monthData.confirmed;
+                
+                updateLockStatus(key, monthData.confirmed);
+            });
+            
+            calculate();
+        }
+
+        function updateLockStatus(key, isLocked) {
+            const revenueInput = document.getElementById(`revenue-${key}`);
+            const costInput = document.getElementById(`cost-${key}`);
+            
+            revenueInput.readOnly = isLocked;
+            costInput.readOnly = isLocked;
+        }
+
+        function onConfirmChange(key) {
+            const checkbox = document.getElementById(`confirmed-${key}`);
+            const isConfirmed = checkbox.checked;
+            
+            updateLockStatus(key, isConfirmed);
+            saveData();
+            calculate();
+        }
+
+        function onInputChange() {
+            saveData();
+            calculate();
+        }
+
+        function createMonthRow(year, month, label) {
+            const key = `${year}-${month}`;
+            
+            return `
+                <div class="month-row">
+                    <div class="month-label">${label}</div>
+                    <input type="text" placeholder="0" id="revenue-${key}" 
+                        oninput="formatInput(this)" 
+                        onchange="onInputChange()">
+                    <input type="text" placeholder="0" id="cost-${key}" 
+                        oninput="formatInput(this)" 
+                        onchange="onInputChange()">
+                    <div class="profit-value" id="profit-${key}">0</div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="confirmed-${key}" 
+                            onchange="onConfirmChange('${key}')">
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMonths() {
+            const container2025 = document.getElementById('months-2025');
+            const container2026 = document.getElementById('months-2026');
+            
+            months.forEach(m => {
+                const row = createMonthRow(m.year, m.month, m.label);
+                if (m.container === 'months-2025') {
+                    container2025.innerHTML += row;
+                } else {
+                    container2026.innerHTML += row;
+                }
+            });
+        }
+
+        function calculate() {
+            let totalRevenue = 0;
+            let totalCost = 0;
+            
+            months.forEach(m => {
+                const key = `${m.year}-${m.month}`;
+                const revenue = parseFormattedNumber(document.getElementById(`revenue-${key}`).value);
+                const cost = parseFormattedNumber(document.getElementById(`cost-${key}`).value);
+                const confirmed = document.getElementById(`confirmed-${key}`).checked;
+                const profit = revenue - cost;
+                
+                totalRevenue += revenue;
+                totalCost += cost;
+                
+                const profitElement = document.getElementById(`profit-${key}`);
+                profitElement.textContent = formatNumber(profit);
+                profitElement.style.color = profit >= 0 ? '#10b981' : '#ef4444';
+                profitElement.style.background = profit >= 0 ? '#d1fae5' : '#fee2e2';
+                
+                const monthRow = profitElement.parentElement;
+                if (confirmed) {
+                    monthRow.style.background = '#f0fdf4';
+                    monthRow.style.borderRadius = '6px';
+                    monthRow.style.padding = '4px 0';
+                } else {
+                    monthRow.style.background = 'transparent';
+                    monthRow.style.borderRadius = '0';
+                    monthRow.style.padding = '0';
+                }
+            });
+            
+            const profit = totalRevenue - totalCost;
+            const needed = profit < 0 ? Math.abs(profit) : 0;
+            const incentive = profit > 0 ? Math.round(profit / 2) : 0;
+            const progress = totalCost > 0 ? Math.min(Math.round((totalRevenue / totalCost) * 100), 100) : 0;
+            
+            document.getElementById('total-revenue').textContent = formatNumber(totalRevenue) + '원';
+            document.getElementById('total-cost').textContent = formatNumber(totalCost) + '원';
+            document.getElementById('current-profit').textContent = formatNumber(profit) + '원';
+            document.getElementById('current-profit').className = profit >= 0 ? 'metric-value success' : 'metric-value danger';
+            document.getElementById('needed-revenue').textContent = needed > 0 ? formatNumber(needed) + '원' : 'BEP 달성!';
+            document.getElementById('needed-revenue').className = needed > 0 ? 'metric-value danger' : 'metric-value success';
+            document.getElementById('incentive').textContent = formatNumber(incentive) + '원';
+            document.getElementById('progress-bar').style.width = progress + '%';
+            document.getElementById('progress-text').textContent = progress + '%';
+            document.getElementById('progress-bar').style.background = progress >= 100 ? '#10b981' : '#3b82f6';
+            
+            updateChart();
+        }
+
+        function resetData() {
+            if (confirm('모든 데이터를 초기화하시겠습니까?')) {
+                try {
+                    localStorage.removeItem('bepData');
+                } catch(e) {}
+                location.reload();
+            }
+        }
+
+        let chart;
+        function updateChart() {
+            const labels = months.map(m => m.label);
+            const revenueData = months.map(m => {
+                const key = `${m.year}-${m.month}`;
+                return parseFormattedNumber(document.getElementById(`revenue-${key}`).value);
+            });
+            const costData = months.map(m => {
+                const key = `${m.year}-${m.month}`;
+                return parseFormattedNumber(document.getElementById(`cost-${key}`).value);
+            });
+            
+            if (chart) {
+                chart.data.labels = labels;
+                chart.data.datasets[0].data = revenueData;
+                chart.data.datasets[1].data = costData;
+                chart.update();
+            } else {
+                const ctx = document.getElementById('chart');
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: '매출',
+                                data: revenueData,
+                                borderColor: '#1D9E75',
+                                backgroundColor: 'rgba(29, 158, 117, 0.1)',
+                                tension: 0.3,
+                                fill: true
+                            },
+                            {
+                                label: '판관비',
+                                data: costData,
+                                borderColor: '#D85A30',
+                                backgroundColor: 'rgba(216, 90, 48, 0.1)',
+                                tension: 0.3,
+                                fill: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return (value / 100000000).toFixed(0) + '억';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        renderMonths();
+        loadData();
+    </script>
+</body>
+</html>
