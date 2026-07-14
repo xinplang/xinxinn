@@ -398,17 +398,17 @@
 
         // 현재 데이터 저장용 객체
         let currentData = {
-            '2025-7': { revenue: 103941984, cost: 114871163, confirmed: false },
-            '2025-8': { revenue: 50202891, cost: 75095550, confirmed: false },
-            '2025-9': { revenue: 64784907, cost: 99138528, confirmed: false },
-            '2025-10': { revenue: 43470318, cost: 100826960, confirmed: false },
-            '2025-11': { revenue: 48045492, cost: 84081034, confirmed: false },
-            '2025-12': { revenue: 77918502, cost: 107175048, confirmed: false },
-            '2026-1': { revenue: 71832764, cost: 83286048, confirmed: false },
-            '2026-2': { revenue: 89046500, cost: 81573797, confirmed: false },
-            '2026-3': { revenue: 209948549, cost: 88190282, confirmed: false },
-            '2026-4': { revenue: 0, cost: 0, confirmed: false },
-            '2026-5': { revenue: 0, cost: 0, confirmed: false },
+            '2025-7': { revenue: 103941984, cost: 114871163, confirmed: true },
+            '2025-8': { revenue: 50202891, cost: 75095550, confirmed: true },
+            '2025-9': { revenue: 64784907, cost: 99138528, confirmed: true },
+            '2025-10': { revenue: 43470318, cost: 100826960, confirmed: true },
+            '2025-11': { revenue: 48045492, cost: 84081034, confirmed: true },
+            '2025-12': { revenue: 77918502, cost: 107175048, confirmed: true },
+            '2026-1': { revenue: 75439539, cost: 89230081, confirmed: true },
+            '2026-2': { revenue: 89046500, cost: 69156734, confirmed: true },
+            '2026-3': { revenue: 210597370, cost: 106525109, confirmed: true },
+            '2026-4': { revenue: 238961374, cost: 104231682, confirmed: true },
+            '2026-5': { revenue: 98484631, cost: 81959376, confirmed: true },
             '2026-6': { revenue: 0, cost: 0, confirmed: false }
         };
 
@@ -447,16 +447,7 @@
         }
 
         function loadData() {
-            // localStorage 먼저 시도
-            try {
-                const saved = localStorage.getItem('bepData');
-                if (saved) {
-                    currentData = JSON.parse(saved);
-                }
-            } catch(e) {
-                console.log('localStorage에서 로드 실패, 기본값 사용');
-            }
-            
+            // 공유용 대시보드: 코드에 저장된 기본값을 항상 표시 (localStorage 우선 로드 안 함)
             months.forEach(m => {
                 const key = `${m.year}-${m.month}`;
                 const monthData = currentData[key];
