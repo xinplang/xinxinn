@@ -246,6 +246,35 @@
         .danger {
             color: #ef4444;
         }
+
+        /* 인센티브 안분 섹션 */
+        .alloc-card {
+            background: #fff;
+            border: 1px solid #e7e5e4;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        .alloc-card .section-title { margin-bottom: 1rem; }
+        .alloc-sub { font-size: 13px; color: #737373; margin-bottom: 1rem; line-height: 1.6; }
+        .alloc-pool {
+            display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: baseline;
+            background: #f0f7f0; border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1.25rem;
+        }
+        .alloc-pool .pool-item { font-size: 13px; color: #737373; }
+        .alloc-pool .pool-item b { display:block; font-size: 22px; font-weight: 600; color: #1D9E75; margin-top: 2px; }
+        .alloc-period { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; font-size: 13px; color:#737373; margin-bottom: 1rem; }
+        .alloc-period input[type=date] { border:1px solid #e7e5e4; border-radius:6px; padding:5px 8px; font-family:inherit; }
+        table.alloc { width: 100%; border-collapse: collapse; font-size: 14px; }
+        table.alloc th, table.alloc td { padding: 10px 12px; text-align: right; border-bottom: 1px solid #eee; }
+        table.alloc th:first-child, table.alloc td:first-child { text-align: left; }
+        table.alloc thead th { background: #f5f5f4; color:#525252; font-weight:600; font-size:12px; }
+        table.alloc tbody tr:hover { background: #fafaf9; }
+        table.alloc tfoot td { font-weight: 700; background:#f0f7f0; border-top: 2px solid #1D9E75; }
+        .ratio-bar { background:#e7e5e4; border-radius:4px; height:6px; margin-top:4px; overflow:hidden; }
+        .ratio-bar span { display:block; height:100%; background:#1D9E75; }
+        .alloc-warn { font-size: 12px; color:#D85A30; margin-top: 10px; }
+        .alloc-note { font-size: 12px; color:#a3a3a3; margin-top: 8px; }
     </style>
 </head>
 <body>
@@ -317,6 +346,36 @@
         
         <div class="chart-container">
             <canvas id="chart"></canvas>
+        </div>
+
+        <div class="alloc-card">
+            <div class="section-title">개인별 인센티브 안분</div>
+            <div class="alloc-sub">위에서 계산된 <b>영업이익의 50%</b>를 재원으로, 재직 중인 구성원에게 대상 기간 내 재직일 비례로 안분합니다. (Mike 제외 · 대상 7명)</div>
+
+            <div class="alloc-pool">
+                <div class="pool-item">영업이익<b id="alloc-profit">0원</b></div>
+                <div class="pool-item">인센티브 재원 (50%)<b id="alloc-pool">0원</b></div>
+            </div>
+
+            <div class="alloc-period">
+                <span>대상 기간</span>
+                <input type="date" id="alloc-start" value="2025-07-01">
+                <span>~</span>
+                <input type="date" id="alloc-end" value="2026-06-30">
+                <span id="alloc-days"></span>
+            </div>
+
+            <table class="alloc">
+                <thead>
+                    <tr><th>이름</th><th>입사일</th><th>재직일</th><th>안분 비율</th><th>예상 인센티브</th></tr>
+                </thead>
+                <tbody id="alloc-body"></tbody>
+                <tfoot>
+                    <tr><td>합계</td><td></td><td id="alloc-sumdays"></td><td>100%</td><td id="alloc-sumpay"></td></tr>
+                </tfoot>
+            </table>
+            <div class="alloc-warn" id="alloc-warn"></div>
+            <div class="alloc-note">안분 비율 = 개인 재직일 ÷ 전원 재직일 합계. 대상 기간을 바꾸면 재직일과 비율이 즉시 재계산됩니다.</div>
         </div>
     </div>
     
@@ -517,6 +576,7 @@
             document.getElementById('progress-bar').style.background = progress >= 100 ? '#10b981' : '#3b82f6';
             
             updateChart();
+            allocateIncentive(profit);
         }
 
         function resetData() {
@@ -593,6 +653,66 @@
                 });
             }
         }
+
+        // ===== 인센티브 안분 =====
+        const allocPeople = [
+            { name: 'Julie',  hire: '2020-10-01' },
+            { name: 'Xin',    hire: '2024-12-11' },
+            { name: 'Rhea',   hire: '2025-03-04' },
+            { name: 'Logan',  hire: '2025-07-10' },
+            { name: 'Theo',   hire: '2026-03-16' },
+            { name: 'Monica', hire: '2026-06-17' },
+            { name: 'Jero',   hire: '2026-06-22' }
+        ]; // Mike 제외
+
+        function parseDate(s) { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
+        function daysInclusive(a, b) { return Math.floor((b - a) / 86400000) + 1; }
+
+        function allocateIncentive(profit) {
+            const pool = profit > 0 ? Math.round(profit / 2) : 0;
+            document.getElementById('alloc-profit').textContent = formatNumber(profit) + '원';
+            document.getElementById('alloc-pool').textContent = formatNumber(pool) + '원';
+
+            const start = parseDate(document.getElementById('alloc-start').value);
+            const end = parseDate(document.getElementById('alloc-end').value);
+            const totalDays = daysInclusive(start, end);
+            document.getElementById('alloc-days').textContent = totalDays > 0 ? `총 ${totalDays}일` : '';
+
+            const rows = allocPeople.map(p => {
+                const hire = parseDate(p.hire);
+                const eff = hire > start ? hire : start;
+                let d = daysInclusive(eff, end);
+                if (d < 0) d = 0;
+                if (d > totalDays) d = totalDays;
+                return { ...p, days: d };
+            });
+            const sumDays = rows.reduce((s, r) => s + r.days, 0);
+
+            const tbody = document.getElementById('alloc-body');
+            tbody.innerHTML = '';
+            let sumPay = 0;
+            rows.forEach(r => {
+                const ratio = sumDays ? r.days / sumDays : 0;
+                const pay = Math.round(pool * ratio);
+                sumPay += pay;
+                const pct = (ratio * 100).toFixed(1);
+                const tr = document.createElement('tr');
+                tr.innerHTML =
+                    `<td><b>${r.name}</b></td>` +
+                    `<td>${r.hire.replace(/-/g, '.')}</td>` +
+                    `<td>${r.days}일</td>` +
+                    `<td>${pct}%<div class="ratio-bar"><span style="width:${pct}%"></span></div></td>` +
+                    `<td>${formatNumber(pay)}원</td>`;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('alloc-sumdays').textContent = sumDays + '일';
+            document.getElementById('alloc-sumpay').textContent = formatNumber(sumPay) + '원';
+            document.getElementById('alloc-warn').textContent =
+                pool <= 0 ? '※ 영업이익이 0 이하이므로 배분할 재원이 없습니다. 월별 데이터를 입력하세요.' : '';
+        }
+
+        document.getElementById('alloc-start').addEventListener('change', calculate);
+        document.getElementById('alloc-end').addEventListener('change', calculate);
 
         renderMonths();
         loadData();
