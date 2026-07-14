@@ -367,15 +367,15 @@
 
             <table class="alloc">
                 <thead>
-                    <tr><th>이름</th><th>입사일</th><th>재직일</th><th>안분 비율</th><th>예상 인센티브</th></tr>
+                    <tr><th>이름</th><th>입사일</th><th>재직일</th><th>재직일 비율</th><th>예상 인센티브</th></tr>
                 </thead>
                 <tbody id="alloc-body"></tbody>
                 <tfoot>
-                    <tr><td>합계</td><td></td><td id="alloc-sumdays"></td><td>100%</td><td id="alloc-sumpay"></td></tr>
+                    <tr><td>합계</td><td></td><td id="alloc-sumdays"></td><td></td><td id="alloc-sumpay"></td></tr>
                 </tfoot>
             </table>
             <div class="alloc-warn" id="alloc-warn"></div>
-            <div class="alloc-note">안분 비율 = 개인 재직일 ÷ 전원 재직일 합계. 대상 기간을 바꾸면 재직일과 비율이 즉시 재계산됩니다.</div>
+            <div class="alloc-note">재직일 비율 = 개인 재직일 ÷ 대상 기간 총일수. 재원은 각자 재직일에 비례해 안분되며, 대상 기간을 바꾸면 즉시 재계산됩니다.</div>
         </div>
     </div>
     
@@ -683,16 +683,17 @@
             tbody.innerHTML = '';
             let sumPay = 0;
             rows.forEach(r => {
-                const ratio = sumDays ? r.days / sumDays : 0;
-                const pay = Math.round(pool * ratio);
+                const allocRatio = sumDays ? r.days / sumDays : 0;   // 금액 계산용(안분 비율, 화면 비노출)
+                const pay = Math.round(pool * allocRatio);
                 sumPay += pay;
-                const pct = (ratio * 100).toFixed(1);
+                const tenureRatio = totalDays > 0 ? r.days / totalDays : 0;   // 화면 표시용(재직일 비율)
+                const tenurePct = (tenureRatio * 100).toFixed(1);
                 const tr = document.createElement('tr');
                 tr.innerHTML =
                     `<td><b>${r.name}</b></td>` +
                     `<td>${r.hire.replace(/-/g, '.')}</td>` +
                     `<td>${r.days}일</td>` +
-                    `<td>${pct}%<div class="ratio-bar"><span style="width:${pct}%"></span></div></td>` +
+                    `<td>${tenurePct}%<div class="ratio-bar"><span style="width:${tenurePct}%"></span></div></td>` +
                     `<td>${formatNumber(pay)}원</td>`;
                 tbody.appendChild(tr);
             });
