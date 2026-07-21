@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>경영지원팀 목표 진행상황 대시보드</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', 'Malgun Gothic', sans-serif;
+    background: #f0efec;
+    margin: 0;
+    padding: 40px 20px;
+  }
+  .wrap {
+    max-width: 920px;
+    margin: 0 auto;
+    background: #fafaf9;
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 28px;
+  }
+  .header-text { text-align: left; }
+  .eyebrow {
+    font-size: 13px;
+    color: #9a9891;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .title-input {
+    font-size: 24px;
+    font-weight: 800;
+    color: #2d2b26;
+    border: none;
+    background: transparent;
+    width: 100%;
+    padding: 2px 0;
+  }
+  .title-input:focus { outline: none; border-bottom: 1px dashed #ccc; }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+  .save-indicator {
+    font-size: 12px;
+    color: #1d9e75;
+    opacity: 0;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+  }
+  .save-indicator.show { opacity: 1; }
+  .reset-btn {
+    font-size: 12px;
+    color: #b0aea6;
+    background: none;
+    border: 1px solid #e2e0da;
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+  .reset-btn:hover { background: #f3f2ee; color: #8a877e; }
+
+  .section { margin-bottom: 26px; }
+  .section-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding-left: 4px;
+  }
+  .bar { width: 4px; height: 20px; border-radius: 2px; flex-shrink: 0; }
+  .section-title-input {
+    font-size: 17px;
+    font-weight: 800;
+    color: #2d2b26;
+    border: none;
+    background: transparent;
+    flex: 1;
+    padding: 2px 0;
+  }
+  .section-title-input:focus { outline: none; border-bottom: 1px dashed #ccc; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 16px;
+    border: 1px solid #ececea;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    position: relative;
+  }
+  .card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .card-title-input {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #2d2b26;
+    border: none;
+    background: transparent;
+    flex: 1;
+    min-width: 0;
+    padding: 2px 0;
+  }
+  .card-title-input:focus { outline: none; border-bottom: 1px dashed #ccc; }
+  .card-title-input::placeholder { color: #c7c5bd; font-weight: 600; }
+
+  .status-select {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 22px 4px 10px;
+    border-radius: 20px;
+    border: none;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    background-size: 10px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'><path fill='%23555' d='M0 0l5 6 5-6z'/></svg>");
+    flex-shrink: 0;
+  }
+
+  .card-desc {
+    width: 100%;
+    font-size: 13.5px;
+    color: #6b6960;
+    line-height: 1.55;
+    border: none;
+    background: transparent;
+    resize: vertical;
+    min-height: 46px;
+    font-family: inherit;
+    padding: 2px 0;
+  }
+  .card-desc:focus { outline: none; }
+  .card-desc::placeholder { color: #c7c5bd; }
+
+  .delete-card-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: none;
+    background: #f3f2ee;
+    color: #b0aea6;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .card:hover .delete-card-btn { display: flex; }
+  .delete-card-btn:hover { background: #fee2e2; color: #991b1b; }
+  .card-head { padding-right: 22px; }
+
+  .add-card-btn {
+    margin-top: 10px;
+    width: 100%;
+    padding: 10px;
+    border: 1px dashed #d8d6cf;
+    border-radius: 12px;
+    background: transparent;
+    color: #a9a79e;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .add-card-btn:hover { background: #f3f2ee; color: #7a7870; border-color: #c7c5bd; }
+
+  .legend {
+    text-align: center;
+    margin-top: 22px;
+    font-size: 12px;
+    color: #b0aea6;
+  }
+
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: 1fr; }
+    .header { flex-direction: column; align-items: flex-start; gap: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="header-text">
+      <div class="eyebrow">경영지원팀 대시보드</div>
+      <input class="title-input" id="dashboardTitle" placeholder="대시보드 제목을 입력하세요" />
+    </div>
+    <div class="header-actions">
+      <span class="save-indicator" id="saveIndicator">저장됨 ✓</span>
+      <button class="reset-btn" id="exportBtn">내보내기</button>
+      <button class="reset-btn" id="importBtn">가져오기</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none" />
+      <button class="reset-btn" id="resetBtn">전체 초기화</button>
+    </div>
+  </div>
+
+  <div id="sectionsContainer"></div>
+
+  <div class="legend">
+    미착수 · 확인필요 · 진행중 · 달성 · 초과달성 — 각 카드 우측 상단 드롭다운에서 선택하세요
+  </div>
+
+</div>
+
+<script>
+const STORAGE_KEY = 'plang-ops-dashboard-v1';
+
+const STATUS_OPTIONS = ['미착수', '확인필요', '진행중', '달성', '초과달성'];
+const STATUS_COLORS = {
+  '미착수':   { bg: '#fee2e2', color: '#991b1b' },
+  '확인필요': { bg: '#fef3c7', color: '#92400e' },
+  '진행중':   { bg: '#dbeafe', color: '#1e40af' },
+  '달성':     { bg: '#d1fae5', color: '#065f46' },
+  '초과달성': { bg: '#bbf7d0', color: '#065f46' }
+};
+
+function uid() {
+  return 'c-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+}
+
+function emptyCard() {
+  return { id: uid(), title: '', desc: '', status: '확인필요' };
+}
+
+function defaultState() {
+  return {
+    dashboardTitle: '2026 목표 진행 현황(2026.07)',
+    sections: [
+      { id: 'finance', title: '💰 재무', color: '#3378dd', cards: [
+        { id: uid(), title: '1. 연매출 15억', desc: '- 4월 역대최고 매출(2.39억)\n- 상반기 누적 매출액: 8억 달성!', status: '진행중' },
+        { id: uid(), title: '2. 상반기 중 BEP 달성', desc: '- 2월~5월 BEP 달성', status: '달성' },
+        { id: uid(), title: '3. 런웨이 6개월 이상 확보', desc: '- 상반기 잔고 7억으로 안정적으로 유지중', status: '달성' },
+        { id: uid(), title: '4. 지출관리(상한/예산 설정)', desc: '- 안정적으로 고정비용 관리\n- 예산 설정 목표는 월별 차이가 커서 보류', status: '진행중' },
+        { id: uid(), title: '5. 재무 지표 공유', desc: '- 먼슬리톡 지표 공유\n- BEP 목표-인센티브 연계 대시보드 생성', status: '진행중' }
+      ]},
+      { id: 'hr', title: '👥 HR', color: '#1d9e75', cards: [
+        { id: uid(), title: '1. 인력충원(팀별 1명)', desc: '- 기획팀: CSM 1명 충원\n- 개발팀: 총 인원 변동없음 / 개발자 1명 8월 합류 예정', status: '진행중' },
+        { id: uid(), title: '2. 협업 커뮤니케이션 강화', desc: '- 업무 소통 개선을 위한 회의 진행, 원칙 수립', status: '진행중' },
+        { id: uid(), title: '3. 다면평가 도입', desc: '- 구성원 변동 등의 사유로 미실시. 하반기 추진 예정.', status: '미착수' },
+        { id: uid(), title: '4. 더 많이 말하는 조직', desc: '- 팀장이 분기별로 관리중.', status: '진행중' }
+      ]},
+      { id: 'ops', title: '🛠️ 운영', color: '#7f77dd', cards: [
+        { id: uid(), title: '주 4.5일제', desc: '- 5/19~6/16 시범 운영 (금요일 4시간)\n- 6/17 정식 운영', status: '진행중' },
+        { id: uid(), title: '근로계약 개편', desc: '- 고정 OT 60시간 → 30시간\n- 4.5일제 명시', status: '진행중' },
+        { id: uid(), title: 'Jira 도입', desc: '- 스프린트 관리 효율화\n- 이슈관리 자동화', status: '진행중' },
+        { id: uid(), title: 'Hermes Agent', desc: '- 업무 효율 높임', status: '진행중' }
+      ]}
+    ]
+  };
+}
+
+let state = null;
+let saveTimer = null;
+const hasStorage = typeof window.storage !== 'undefined';
+
+async function loadState() {
+  if (!hasStorage) return defaultState();
+  try {
+    const res = await window.storage.get(STORAGE_KEY);
+    if (res && res.value) {
+      return JSON.parse(res.value);
+    }
+  } catch (e) {
+    // key not found or read error — fall back to defaults
+  }
+  return defaultState();
+}
+
+function scheduleSave() {
+  if (!hasStorage) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try {
+      await window.storage.set(STORAGE_KEY, JSON.stringify(state));
+      const ind = document.getElementById('saveIndicator');
+      ind.classList.add('show');
+      setTimeout(() => ind.classList.remove('show'), 1200);
+    } catch (e) {
+      console.error('저장 실패', e);
+    }
+  }, 500);
+}
+
+function findSection(sectionId) {
+  return state.sections.find(s => s.id === sectionId);
+}
+function findCard(sectionId, cardId) {
+  const sec = findSection(sectionId);
+  return sec ? sec.cards.find(c => c.id === cardId) : null;
+}
+
+function render() {
+  document.getElementById('dashboardTitle').value = state.dashboardTitle || '';
+
+  const container = document.getElementById('sectionsContainer');
+  container.innerHTML = state.sections.map(sec => `
+    <div class="section" data-section-id="${sec.id}">
+      <div class="section-head">
+        <div class="bar" style="background:${sec.color}"></div>
+        <input class="section-title-input" data-role="section-title" data-section-id="${sec.id}" value="${escapeAttr(sec.title)}" />
+      </div>
+      <div class="grid">
+        ${sec.cards.map(card => renderCard(sec.id, card)).join('')}
+      </div>
+      <button class="add-card-btn" data-role="add-card" data-section-id="${sec.id}">+ 카드 추가</button>
+    </div>
+  `).join('');
+}
+
+function renderCard(sectionId, card) {
+  const colors = STATUS_COLORS[card.status] || STATUS_COLORS['확인필요'];
+  const options = STATUS_OPTIONS.map(opt =>
+    `<option value="${opt}" ${opt === card.status ? 'selected' : ''}>${opt}</option>`
+  ).join('');
+  return `
+    <div class="card" data-card-id="${card.id}" data-section-id="${sectionId}">
+      <button class="delete-card-btn" data-role="delete-card" data-section-id="${sectionId}" data-card-id="${card.id}">×</button>
+      <div class="card-head">
+        <input class="card-title-input" data-role="card-title" data-section-id="${sectionId}" data-card-id="${card.id}" placeholder="목표명을 입력하세요" value="${escapeAttr(card.title)}" />
+        <select class="status-select" data-role="card-status" data-section-id="${sectionId}" data-card-id="${card.id}" style="background-color:${colors.bg};color:${colors.color}">
+          ${options}
+        </select>
+      </div>
+      <textarea class="card-desc" data-role="card-desc" data-section-id="${sectionId}" data-card-id="${card.id}" placeholder="진행상황을 입력하세요">${escapeHtml(card.desc)}</textarea>
+    </div>
+  `;
+}
+
+function escapeAttr(str) {
+  return (str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+function escapeHtml(str) {
+  return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// event delegation
+document.addEventListener('input', (e) => {
+  const t = e.target;
+  if (t.id === 'dashboardTitle') {
+    state.dashboardTitle = t.value;
+    isDirty = true;
+    scheduleSave();
+    return;
+  }
+  const role = t.dataset.role;
+  if (role === 'section-title') {
+    const sec = findSection(t.dataset.sectionId);
+    if (sec) { sec.title = t.value; isDirty = true; scheduleSave(); }
+  } else if (role === 'card-title') {
+    const card = findCard(t.dataset.sectionId, t.dataset.cardId);
+    if (card) { card.title = t.value; isDirty = true; scheduleSave(); }
+  } else if (role === 'card-desc') {
+    const card = findCard(t.dataset.sectionId, t.dataset.cardId);
+    if (card) { card.desc = t.value; isDirty = true; scheduleSave(); }
+  }
+});
+
+document.addEventListener('change', (e) => {
+  const t = e.target;
+  if (t.dataset.role === 'card-status') {
+    const card = findCard(t.dataset.sectionId, t.dataset.cardId);
+    if (card) {
+      card.status = t.value;
+      const colors = STATUS_COLORS[card.status];
+      t.style.backgroundColor = colors.bg;
+      t.style.color = colors.color;
+      isDirty = true;
+      scheduleSave();
+    }
+  }
+});
+
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-role]');
+  if (!t) return;
+
+  if (t.dataset.role === 'add-card') {
+    const sec = findSection(t.dataset.sectionId);
+    if (sec) {
+      sec.cards.push(emptyCard());
+      render();
+      isDirty = true;
+      scheduleSave();
+    }
+  } else if (t.dataset.role === 'delete-card') {
+    const sec = findSection(t.dataset.sectionId);
+    if (sec) {
+      sec.cards = sec.cards.filter(c => c.id !== t.dataset.cardId);
+      if (sec.cards.length === 0) sec.cards.push(emptyCard());
+      render();
+      isDirty = true;
+      scheduleSave();
+    }
+  }
+});
+
+let isDirty = false;
+
+window.addEventListener('beforeunload', (e) => {
+  if (isDirty) {
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  }
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if (confirm('모든 내용을 초기화할까요? 이 작업은 되돌릴 수 없어요.')) {
+    state = defaultState();
+    render();
+    scheduleSave();
+    isDirty = false;
+  }
+});
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `plang-dashboard-backup-${dateStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  isDirty = false;
+});
+
+document.getElementById('importBtn').addEventListener('click', () => {
+  document.getElementById('importFile').click();
+});
+
+document.getElementById('importFile').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    try {
+      const parsed = JSON.parse(evt.target.result);
+      if (!parsed.sections) throw new Error('올바른 백업 파일이 아니에요');
+      if (confirm('가져온 내용으로 현재 대시보드를 덮어쓸까요?')) {
+        state = parsed;
+        render();
+        scheduleSave();
+        isDirty = false;
+      }
+    } catch (err) {
+      alert('파일을 읽는 중 문제가 생겼어요. 올바른 백업(JSON) 파일인지 확인해주세요.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+(async () => {
+  state = await loadState();
+  render();
+})();
+</script>
+</body>
+</html>
