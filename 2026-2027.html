@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>플랭 인센티브 대시보드 (2026.7 – 2027.6)</title>
+<style>
+  :root{
+    --bg:#f7f7f5; --card:#ffffff; --line:#e6e5e1; --line-2:#d2d1cc;
+    --ink:#1b1a18; --ink-2:#56544e; --ink-3:#8b8983;
+
+    --rev:#2B4A9B;   --rev-bg:#eef1fa;
+    --cost:#B45309;  --cost-bg:#fdf3e7;
+    --up:#0d8a5c;    --up-bg:#e9f6ef;
+    --down:#cf4436;  --down-bg:#fdeeec;
+
+    --t1:#14857A;    --t1-bg:#e7f4f2;
+    --t2:#2B4A9B;    --t2-bg:#eef1fa;
+    --t3:#B45309;    --t3-bg:#fdf3e7;
+
+    --r:12px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px; margin:0 auto; padding:38px 20px 80px}
+  .num{font-variant-numeric:tabular-nums}
+
+  h1{font-size:27px; font-weight:700; letter-spacing:-.025em; margin:0 0 7px; line-height:1.28}
+  .sub{font-size:13px; color:var(--ink-3); margin:0 0 24px}
+  .sec{margin-top:24px}
+  .sec-title{font-size:14.5px; font-weight:650; margin:0 0 12px; letter-spacing:-.01em; color:var(--ink-2)}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--r)}
+
+  /* ── 규정 ── */
+  .rules{position:relative; padding:20px 22px 20px 26px; background:#fffdf6; border:1px solid #eadfc2; border-radius:var(--r); overflow:hidden}
+  .rules::before{content:''; position:absolute; left:0; top:0; bottom:0; width:5px; background:linear-gradient(180deg,#e0a52c,#B45309)}
+  .rules h2{font-size:14px; font-weight:700; margin:0 0 14px; color:#7a4a06}
+  .rules dl{margin:0; display:grid; grid-template-columns:120px 1fr; gap:10px 16px}
+  .rules dt{font-size:12px; font-weight:650; color:#9a7434; padding-top:2px}
+  .rules dd{margin:0; font-size:13.5px; line-height:1.5}
+  .rules dd b{font-weight:650}
+  .rules .warn{color:var(--down); font-weight:650}
+
+  /* ── KPI ── */
+  .kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(178px,1fr)); gap:12px}
+  .kpi{position:relative; padding:15px 17px; border-radius:var(--r); border:1px solid var(--line); background:var(--card); overflow:hidden}
+  .kpi::before{content:''; position:absolute; left:0; right:0; top:0; height:3px; background:var(--c,var(--ink-3))}
+  .kpi .lb{font-size:12px; color:var(--ink-3); margin-bottom:5px; font-weight:500}
+  .kpi .vl{font-size:22px; font-weight:700; letter-spacing:-.025em}
+  .kpi .nt{font-size:11px; color:var(--ink-3); margin-top:4px}
+
+  /* ── HERO ── */
+  .hero{
+    position:relative; padding:26px 28px; border-radius:var(--r); overflow:hidden;
+    background:linear-gradient(135deg,#0e2f2b 0%,#14514a 55%,#1a5d73 100%); color:#fff;
+  }
+  .hero .eyebrow{font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:#8fcfc4; font-weight:650; margin-bottom:10px}
+  .hero .big{font-size:44px; font-weight:750; letter-spacing:-.035em; line-height:1.05}
+  .hero .meta{margin-top:12px; font-size:13px; color:#bfe1db; line-height:1.6}
+  .hero .meta b{color:#fff; font-weight:650}
+  .badge{display:inline-flex; align-items:center; gap:6px; padding:4px 11px; border-radius:99px; font-size:12px; font-weight:650; margin-bottom:14px}
+  .badge.ok{background:rgba(255,255,255,.16); color:#a8ebd6}
+  .badge.no{background:rgba(255,255,255,.13); color:#f4c3bc}
+  .badge i{width:6px; height:6px; border-radius:99px; background:currentColor}
+  .heroSplit{display:grid; grid-template-columns:1.2fr 1fr; gap:26px; align-items:center}
+  .miniTiers{display:grid; gap:7px}
+  .mt{display:flex; align-items:center; gap:9px; font-size:12.5px; color:#cfe6e2}
+  .mt .sw{width:10px; height:10px; border-radius:3px; flex:0 0 auto}
+  .mt .amt{margin-left:auto; font-weight:650; color:#fff}
+
+  /* ── 누진 막대 ── */
+  .tierbox{padding:22px}
+  .bar{position:relative; display:flex; height:52px; border-radius:8px; overflow:hidden; border:1px solid var(--line-2)}
+  .band{position:relative; border-right:1px solid var(--line-2); overflow:hidden}
+  .band:last-child{border-right:none}
+  .band .bg{position:absolute; inset:0}
+  .band .fill{position:absolute; inset:0 auto 0 0; width:0; transition:width .6s cubic-bezier(.22,1,.36,1)}
+  .band .tag{position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:11.5px; font-weight:700; z-index:2; white-space:nowrap}
+  .axis{position:relative; height:18px; margin-top:7px; font-size:11px; color:var(--ink-3)}
+  .axis span{position:absolute; transform:translateX(-50%); white-space:nowrap}
+  .axis span:first-child{transform:none}
+
+  .tiergrid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:18px}
+  .tcell{border-radius:9px; padding:13px 15px; border:1px solid transparent}
+  .tcell .h{font-size:11.5px; font-weight:650; display:flex; align-items:center; gap:6px; margin-bottom:6px}
+  .tcell .v{font-size:19px; font-weight:700; letter-spacing:-.02em}
+  .tcell .s{font-size:11px; margin-top:4px; opacity:.75}
+  .mini{margin-top:7px; height:5px; border-radius:99px; background:rgba(0,0,0,.08); overflow:hidden}
+  .mini i{display:block; height:100%; width:0; transition:width .6s cubic-bezier(.22,1,.36,1)}
+
+  /* ── 달성률 ── */
+  .prog{padding:17px 20px}
+  .prog .row{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:9px}
+  .prog .lb{font-size:12.5px; color:var(--ink-3)}
+  .prog .vl{font-size:16px; font-weight:700}
+  .track{height:10px; background:#ecebe7; border-radius:99px; overflow:hidden}
+  .track i{display:block; height:100%; width:0; border-radius:99px; transition:width .6s cubic-bezier(.22,1,.36,1),background .3s}
+
+  /* ── 차트 ── */
+  .chartcard{padding:18px 20px 12px}
+  .chartlegend{display:flex; gap:16px; font-size:11.5px; color:var(--ink-3); margin-bottom:12px; flex-wrap:wrap}
+  .chartlegend span{display:flex; align-items:center; gap:6px}
+  .chartlegend i{width:10px; height:10px; border-radius:3px}
+  svg.chart{width:100%; height:auto; display:block; overflow:visible}
+
+  /* ── 표 ── */
+  table{width:100%; border-collapse:collapse; font-size:13px}
+  th,td{padding:9px 10px; text-align:right; border-bottom:1px solid var(--line)}
+  th{font-size:11.5px; font-weight:650; color:var(--ink-3); white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  tbody tr:last-child td{border-bottom:none}
+  tfoot td{border-top:1.5px solid var(--line-2); border-bottom:none; font-weight:700; padding-top:11px}
+  tr.done{background:#fafaf8}
+  input[type=text]{
+    width:100%; max-width:148px; padding:6px 9px; text-align:right; font-size:13px;
+    border:1px solid var(--line-2); border-radius:7px; background:#fff; color:var(--ink);
+    font-family:inherit; font-variant-numeric:tabular-nums;
+  }
+  input[type=text]:focus{outline:2px solid #b9c6e6; outline-offset:1px; border-color:var(--rev)}
+  input[type=checkbox]{accent-color:var(--t1); width:15px; height:15px}
+  .yearhead{font-size:12px; font-weight:700; color:var(--ink-2); padding:16px 10px 6px; background:transparent; letter-spacing:.01em}
+  .inputcard{padding:6px 18px 18px}
+  .miniwrap{overflow-x:auto}
+  .pos{color:var(--up)} .neg{color:var(--down)}
+
+  .btn{margin-top:14px; padding:7px 14px; font-size:12.5px; font-family:inherit;
+    border:1px solid var(--line-2); background:#fff; border-radius:8px; color:var(--ink-2); cursor:pointer}
+  .btn:hover{background:#f3f2ef}
+  .note{font-size:11.5px; color:var(--ink-3); line-height:1.65; margin-top:12px}
+
+  /* ── 배분 ── */
+  .allocmeta{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; padding:17px 18px; border-bottom:1px solid var(--line); background:#fbfbf9; border-radius:var(--r) var(--r) 0 0}
+  .allocmeta div span{display:block; font-size:11.5px; color:var(--ink-3); margin-bottom:4px}
+  .allocmeta div strong{font-size:17px; font-weight:700; letter-spacing:-.02em}
+  .tblpad{padding:4px 18px 18px}
+  .chip{display:inline-block; padding:2px 8px; border-radius:99px; font-size:11px; font-weight:650}
+  .newbadge{display:inline-block; margin-left:6px; padding:1px 6px; font-size:10px; font-weight:700; border-radius:5px; background:var(--up-bg); color:var(--up)}
+  .sharebar{display:inline-block; vertical-align:middle; width:52px; height:5px; border-radius:99px; background:#ecebe7; margin-right:7px; overflow:hidden}
+  .sharebar i{display:block; height:100%; background:var(--ink-2)}
+
+  @media (max-width:700px){
+    .wrap{padding:24px 14px 60px}
+    h1{font-size:20px}
+    .heroSplit{grid-template-columns:1fr; gap:18px}
+    .hero .big{font-size:33px}
+    .rules dl{grid-template-columns:1fr; gap:2px 0}
+    .rules dt{margin-top:10px}
+    .tiergrid{grid-template-columns:1fr}
+    .band .tag{font-size:10.5px; left:7px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>플랭 인센티브 대시보드 (2026.7 – 2027.6)</h1>
+  <p class="sub">누진형 이익공유제 · 대상 기간 2026년 7월 1일 – 2027년 6월 30일 (총 365일) · 1회성 시범 운영</p>
+
+  <!-- 규정 -->
+  <section class="rules">
+    <h2>📌 지급 규정</h2>
+    <dl>
+      <dt>지급 대상</dt>
+      <dd>정규직만 해당. <b>계약직은 별도 cap에 따라 지급</b>됩니다.</dd>
+      <dt>퇴사자</dt>
+      <dd><span class="warn">지급 전 퇴사 시 지급 대상에 포함되지 않습니다.</span></dd>
+      <dt>재원 상한(cap)</dt>
+      <dd>정규직 <b>본인 연봉의 100%</b> / 계약직 <b>100만원</b> (연봉 무관)</dd>
+      <dt>cap 초과 잔액</dt>
+      <dd>cap 적용으로 발생한 잔액은 <b>재배분하지 않고 회사가 유보</b>합니다.</dd>
+      <dt>총액 확정</dt>
+      <dd>2027년 6월까지의 매출·영업이익 정산이 완료되는 <b>2027년 7월 25일 전후 먼슬리톡</b></dd>
+      <dt>지급 시점</dt>
+      <dd><b>2027년 8월 급여일</b></dd>
+    </dl>
+  </section>
+
+  <!-- KPI -->
+  <div class="sec kpis">
+    <div class="kpi" style="--c:var(--rev)"><div class="lb">총 매출</div><div class="vl num" id="k-rev" style="color:var(--rev)">0원</div></div>
+    <div class="kpi" style="--c:var(--cost)"><div class="lb">총 판관비</div><div class="vl num" id="k-cost" style="color:var(--cost)">0원</div></div>
+    <div class="kpi" id="kc-op" style="--c:var(--ink-3)"><div class="lb">영업이익</div><div class="vl num" id="k-op">0원</div></div>
+    <div class="kpi" id="kc-need" style="--c:var(--ink-3)"><div class="lb">BEP까지 필요 매출</div><div class="vl num" id="k-need">—</div><div class="nt" id="k-need-nt">영업이익 0원 기준</div></div>
+  </div>
+
+  <!-- 달성률 -->
+  <div class="sec card prog">
+    <div class="row"><span class="lb">BEP 달성률 &nbsp;<span style="color:var(--ink-3);font-size:11.5px">총매출 ÷ 총판관비</span></span><span class="vl num" id="p-txt">0%</span></div>
+    <div class="track"><i id="p-bar"></i></div>
+  </div>
+
+  <!-- HERO -->
+  <div class="sec hero">
+    <div class="heroSplit">
+      <div>
+        <div class="eyebrow">예상 인센티브 재원</div>
+        <div class="badge no" id="h-badge"><i></i><span id="h-badge-t">BEP 미달</span></div>
+        <div class="big num" id="pay-total">0원</div>
+        <div class="meta" id="pay-meta">영업이익이 BEP(0원)를 넘어야 재원이 생깁니다.</div>
+      </div>
+      <div class="miniTiers" id="miniTiers"></div>
+    </div>
+  </div>
+
+  <!-- 누진 구간 -->
+  <div class="sec">
+    <h2 class="sec-title">구간별 누진 현황</h2>
+    <div class="card tierbox">
+      <div class="bar">
+        <div class="band" id="b1"><div class="bg" style="background:var(--t1-bg)"></div><div class="fill" style="background:var(--t1)"></div><div class="tag">1구간 · 10%</div></div>
+        <div class="band" id="b2"><div class="bg" style="background:var(--t2-bg)"></div><div class="fill" style="background:var(--t2)"></div><div class="tag">2구간 · 20%</div></div>
+        <div class="band" id="b3"><div class="bg" style="background:var(--t3-bg)"></div><div class="fill" style="background:var(--t3)"></div><div class="tag">3구간 · 30%</div></div>
+      </div>
+      <div class="axis" id="axis"></div>
+
+      <div class="tiergrid">
+        <div class="tcell" style="background:var(--t1-bg); border-color:#cfe6e2; color:#0c5f57">
+          <div class="h">0 ~ 5억 · 10%</div><div class="v num" id="t1-v">0원</div>
+          <div class="mini"><i id="t1-m" style="background:var(--t1)"></i></div>
+          <div class="s" id="t1-s">구간 소진 0% · 최대 5,000만원</div>
+        </div>
+        <div class="tcell" style="background:var(--t2-bg); border-color:#d3dcf2; color:#1f3873">
+          <div class="h">5억 초과 ~ 10억 · 20%</div><div class="v num" id="t2-v">0원</div>
+          <div class="mini"><i id="t2-m" style="background:var(--t2)"></i></div>
+          <div class="s" id="t2-s">구간 소진 0% · 최대 1억원</div>
+        </div>
+        <div class="tcell" style="background:var(--t3-bg); border-color:#f0dcbe; color:#8a4008">
+          <div class="h">10억 초과분 · 30%</div><div class="v num" id="t3-v">0원</div>
+          <div class="mini"><i id="t3-m" style="background:var(--t3)"></i></div>
+          <div class="s" id="t3-s">초과분 없음</div>
+        </div>
+      </div>
+      <p class="note">구간별 요율은 <b>해당 구간에 들어온 금액에만</b> 적용됩니다. 영업이익이 7억이면 앞선 5억에는 10%, 나머지 2억에만 20%가 붙어 총 9,000만원이 됩니다.</p>
+    </div>
+  </div>
+
+  <!-- 월별 추이 -->
+  <div class="sec">
+    <h2 class="sec-title">월별 영업손익 추이</h2>
+    <div class="card chartcard">
+      <div class="chartlegend">
+        <span><i style="background:var(--up)"></i>영업이익</span>
+        <span><i style="background:var(--down)"></i>영업손실</span>
+        <span><i style="background:#d9d8d3"></i>미입력</span>
+        <span style="color:var(--ink-3)">· 옅은 막대는 정산 미확정</span>
+      </div>
+      <svg class="chart" id="chart" viewBox="0 0 760 210" preserveAspectRatio="xMidYMid meet" role="img" aria-label="월별 영업손익 막대 그래프"></svg>
+    </div>
+  </div>
+
+  <!-- 월별 입력 -->
+  <div class="sec">
+    <h2 class="sec-title">월별 데이터 입력</h2>
+    <div class="card inputcard">
+      <div class="miniwrap">
+        <table>
+          <thead><tr><th style="min-width:92px">월</th><th>총매출</th><th>판관비</th><th>영업손익</th><th style="width:52px">확정</th></tr></thead>
+          <tbody id="rows"></tbody>
+          <tfoot><tr><td>합계</td><td class="num" id="f-rev">0</td><td class="num" id="f-cost">0</td><td class="num" id="f-op">0</td><td></td></tr></tfoot>
+        </table>
+      </div>
+      <button class="btn" id="reset">데이터 초기화</button>
+      <p class="note">금액은 원 단위로 입력하세요. 입력값은 이 브라우저에만 저장되며 다른 사람 화면에는 반영되지 않습니다. ‘확정’은 세무 조정까지 끝난 달을 구분하는 표시입니다.</p>
+    </div>
+  </div>
+
+  <!-- 개인별 배분 -->
+  <div class="sec">
+    <h2 class="sec-title">개인별 배분</h2>
+    <div class="card">
+      <div class="allocmeta">
+        <div><span>인센티브 재원</span><strong class="num" id="a-pool" style="color:var(--t1)">0원</strong></div>
+        <div><span>전원 재직일 합계</span><strong class="num" id="a-days">0일</strong></div>
+        <div><span>재직일 1일당</span><strong class="num" id="a-per">0원</strong></div>
+        <div><span>대상 인원</span><strong id="a-cnt">8명</strong></div>
+      </div>
+      <div class="tblpad miniwrap">
+        <table>
+          <thead><tr><th style="min-width:118px">이름</th><th style="text-align:left">팀</th><th style="text-align:left">입사일</th><th>재직일</th><th>배분 비중</th><th>예상 지급액</th></tr></thead>
+          <tbody id="alloc"></tbody>
+          <tfoot><tr><td>합계</td><td></td><td></td><td class="num" id="al-days">0일</td><td class="num">100.0%</td><td class="num" id="al-pay">0원</td></tr></tfoot>
+        </table>
+        <p class="note">
+          배분 공식 = <b>(총 재원 ÷ 전원 재직일 합계) × 개인 재직일</b>. 기간 시작(2026-07-01) 전 입사자는 365일 전체가 인정되고, 기간 중 입사자는 입사일부터 2027-06-30까지 일수로 안분됩니다. 수습기간은 재직일에 포함, 무급휴직은 제외됩니다.<br>
+          Mike(대표)는 배분 대상에서 제외됩니다. 표의 금액은 cap 적용 전 값이며, 개인별 cap은 지급 직전에 별도 검증합니다. cap으로 잘린 잔액은 재배분하지 않고 회사가 유보합니다.
+        </p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  const START=new Date(2026,6,1), END=new Date(2027,5,30), DAY=864e5;
+  const days=(a,b)=>Math.round((b-a)/DAY)+1;
+  const TOTAL_DAYS=days(START,END);
+
+  const TEAM={'경영지원팀':{c:'#2B4A9B',bg:'#eef1fa'},'기획팀':{c:'#0F766E',bg:'#e7f4f2'},'개발팀':{c:'#B45309',bg:'#fdf3e7'}};
+
+  const MEMBERS=[
+    {kr:'이주연',en:'Julie', team:'기획팀',    join:'2020-10-01'},
+    {kr:'신정화',en:'Xin',   team:'경영지원팀',join:'2024-12-11'},
+    {kr:'임채을',en:'Rhea',  team:'기획팀',    join:'2025-03-04'},
+    {kr:'오인권',en:'Logan', team:'기획팀',    join:'2025-07-10'},
+    {kr:'김태현',en:'Theo',  team:'개발팀',    join:'2026-03-16'},
+    {kr:'이예지',en:'Monica',team:'기획팀',    join:'2026-06-17'},
+    {kr:'채주영',en:'Jero',  team:'개발팀',    join:'2026-06-22'},
+    {kr:'송준형',en:'Dante', team:'개발팀',    join:'2026-08-03', isNew:true}
+  ];
+  MEMBERS.forEach(m=>{
+    const [y,mo,d]=m.join.split('-').map(Number), jd=new Date(y,mo-1,d);
+    m.days = jd<=START ? TOTAL_DAYS : (jd>END?0:days(jd,END));
+  });
+  const SUM_DAYS=MEMBERS.reduce((s,m)=>s+m.days,0);
+
+  const MONTHS=[];
+  for(let m=7;m<=12;m++) MONTHS.push({key:'2026-'+String(m).padStart(2,'0'),y:2026,m:m});
+  for(let m=1;m<=6;m++)  MONTHS.push({key:'2027-'+String(m).padStart(2,'0'),y:2027,m:m});
+
+  const KEY='plang-incentive-2026h2-v1';
+  let S={}; MONTHS.forEach(x=>S[x.key]={rev:0,cost:0,done:false});
+  try{const raw=localStorage.getItem(KEY); if(raw){const o=JSON.parse(raw);
+    MONTHS.forEach(x=>{if(o[x.key]) S[x.key]=Object.assign(S[x.key],o[x.key]);});}}catch(e){}
+  const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
+
+  const EOK=1e8,MAN=1e4;
+  const comma=n=>Math.round(n).toLocaleString('ko-KR');
+  function won(n){
+    const s=n<0?'-':'', a=Math.abs(n);
+    if(a===0) return '0원';
+    if(a>=EOK){const v=a/EOK; return s+(v>=100?v.toFixed(0):v.toFixed(2).replace(/\.?0+$/,''))+'억원';}
+    if(a>=MAN) return s+comma(a/MAN)+'만원';
+    return s+comma(a)+'원';
+  }
+  const B1=5e8,B2=10e8;
+  function tiers(op){
+    const p=Math.max(op,0);
+    const a1=Math.min(p,B1),a2=Math.min(Math.max(p-B1,0),B1),a3=Math.max(p-B2,0);
+    return {a1,a2,a3,t1:a1*.1,t2:a2*.2,t3:a3*.3,total:a1*.1+a2*.2+a3*.3};
+  }
+
+  /* 입력 행 */
+  const rows=document.getElementById('rows');
+  function buildRows(){
+    let h='';
+    [2026,2027].forEach(y=>{
+      const list=MONTHS.filter(x=>x.y===y);
+      h+=`<tr><td class="yearhead" colspan="5">${y}년 · ${list[0].m}–${list[list.length-1].m}월</td></tr>`;
+      list.forEach(x=>{
+        h+=`<tr data-k="${x.key}"><td>${x.m}월</td>
+        <td><input type="text" inputmode="numeric" data-f="rev" value="${S[x.key].rev?comma(S[x.key].rev):''}" placeholder="0"></td>
+        <td><input type="text" inputmode="numeric" data-f="cost" value="${S[x.key].cost?comma(S[x.key].cost):''}" placeholder="0"></td>
+        <td class="num" data-o="op">—</td>
+        <td style="text-align:center"><input type="checkbox" data-f="done" ${S[x.key].done?'checked':''}></td></tr>`;
+      });
+    });
+    rows.innerHTML=h;
+  }
+  buildRows();
+
+  rows.addEventListener('input',e=>{
+    const inp=e.target,tr=inp.closest('tr'); if(!tr||!tr.dataset.k) return;
+    const k=tr.dataset.k,f=inp.dataset.f;
+    if(f==='done'){S[k].done=inp.checked;}
+    else{
+      const n=Number(String(inp.value).replace(/[^0-9]/g,''))||0; S[k][f]=n;
+      const pos=inp.selectionStart,before=inp.value.length;
+      inp.value=n?comma(n):'';
+      const d=inp.value.length-before;
+      try{inp.setSelectionRange(pos+d,pos+d);}catch(_){}
+    }
+    save(); render();
+  });
+  rows.addEventListener('change',e=>{
+    if(e.target.dataset.f==='done'){S[e.target.closest('tr').dataset.k].done=e.target.checked; save(); render();}
+  });
+  document.getElementById('reset').addEventListener('click',()=>{
+    if(!confirm('입력한 월별 금액을 모두 지웁니다. 계속할까요?')) return;
+    MONTHS.forEach(x=>S[x.key]={rev:0,cost:0,done:false}); save(); buildRows(); render();
+  });
+
+  /* 차트 */
+  const svgNS='http://www.w3.org/2000/svg';
+  function drawChart(){
+    const svg=document.getElementById('chart');
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    const W=760,H=210, padL=8,padR=8,padT=14,padB=26;
+    const vals=MONTHS.map(x=>({v:S[x.key].rev-S[x.key].cost, empty:!S[x.key].rev&&!S[x.key].cost, done:S[x.key].done, m:x.m}));
+    const maxP=Math.max(0,...vals.map(d=>d.v)), maxN=Math.min(0,...vals.map(d=>d.v));
+    const span=Math.max(maxP-maxN,1);
+    const plotH=H-padT-padB;
+    const zeroY=padT+plotH*(maxP/span);
+    const n=vals.length, slot=(W-padL-padR)/n, bw=Math.min(slot*0.56,36);
+
+    const mk=(t,a)=>{const e=document.createElementNS(svgNS,t); for(const k in a) e.setAttribute(k,a[k]); return e;};
+
+    svg.appendChild(mk('line',{x1:padL,y1:zeroY,x2:W-padR,y2:zeroY,stroke:'#d2d1cc','stroke-width':1}));
+
+    vals.forEach((d,i)=>{
+      const cx=padL+slot*i+slot/2;
+      if(d.empty){
+        svg.appendChild(mk('rect',{x:cx-bw/2,y:zeroY-5,width:bw,height:5,rx:2,fill:'#e2e1dc'}));
+      }else{
+        const hh=Math.max(Math.abs(d.v)/span*plotH,2);
+        const up=d.v>=0;
+        const r=mk('rect',{x:cx-bw/2,y:up?zeroY-hh:zeroY,width:bw,height:hh,rx:3,
+          fill:up?'#0d8a5c':'#cf4436','fill-opacity':d.done?1:0.42});
+        svg.appendChild(r);
+        const ti=document.createElementNS(svgNS,'title'); ti.textContent=d.m+'월 '+won(d.v)+(d.done?' (확정)':' (미확정)');
+        r.appendChild(ti);
+        const lb=mk('text',{x:cx,y:up?zeroY-hh-5:zeroY+hh+13,'text-anchor':'middle','font-size':'9.5',
+          fill:up?'#0d8a5c':'#cf4436','font-weight':'600'});
+        lb.textContent=won(d.v).replace('원','');
+        svg.appendChild(lb);
+      }
+      const t=mk('text',{x:cx,y:H-8,'text-anchor':'middle','font-size':'10.5',fill:'#8b8983'});
+      t.textContent=d.m+'월';
+      svg.appendChild(t);
+    });
+  }
+
+  const allocBody=document.getElementById('alloc');
+
+  function render(){
+    let rev=0,cost=0;
+    MONTHS.forEach(x=>{rev+=S[x.key].rev; cost+=S[x.key].cost;});
+    const op=rev-cost, t=tiers(op);
+
+    document.getElementById('k-rev').textContent=won(rev);
+    document.getElementById('k-cost').textContent=won(cost);
+
+    const kop=document.getElementById('k-op'), kcop=document.getElementById('kc-op');
+    kop.textContent=won(op);
+    const opCol = op>0?'var(--up)':op<0?'var(--down)':'var(--ink)';
+    kop.style.color=opCol; kcop.style.setProperty('--c', op===0?'var(--ink-3)':opCol);
+
+    const need=document.getElementById('k-need'), nt=document.getElementById('k-need-nt'), kcn=document.getElementById('kc-need');
+    if(rev===0&&cost===0){ need.textContent='—'; need.style.color='var(--ink)'; nt.textContent='영업이익 0원 기준'; kcn.style.setProperty('--c','var(--ink-3)'); }
+    else if(op<0){ need.textContent=won(-op); need.style.color='var(--down)'; nt.textContent='BEP까지 남은 금액'; kcn.style.setProperty('--c','var(--down)'); }
+    else{ need.textContent='달성'; need.style.color='var(--up)'; nt.textContent='BEP 초과 '+won(op); kcn.style.setProperty('--c','var(--up)'); }
+
+    const ach = cost>0 ? rev/cost*100 : 0;
+    const pbar=document.getElementById('p-bar');
+    pbar.style.width=Math.min(ach,100).toFixed(1)+'%';
+    pbar.style.background = ach>=100 ? 'linear-gradient(90deg,#14857A,#0d8a5c)'
+                        : ach>=80  ? 'linear-gradient(90deg,#d99a2b,#e0a52c)'
+                        : 'linear-gradient(90deg,#cf4436,#e0705f)';
+    const ptxt=document.getElementById('p-txt');
+    ptxt.textContent=ach.toFixed(1)+'%';
+    ptxt.style.color = ach>=100?'var(--up)':ach>=80?'#a06c0a':'var(--down)';
+
+    /* hero */
+    document.getElementById('pay-total').textContent=won(t.total);
+    const bd=document.getElementById('h-badge'), bdt=document.getElementById('h-badge-t');
+    if(op>0){ bd.className='badge ok'; bdt.textContent='BEP 달성 · 재원 발생'; }
+    else{ bd.className='badge no'; bdt.textContent= (rev===0&&cost===0)?'데이터 입력 전':'BEP 미달'; }
+    document.getElementById('pay-meta').innerHTML = op>0
+      ? `영업이익 <b>${won(op)}</b> · 실질 요율 <b>${(t.total/op*100).toFixed(1)}%</b><br>1인당(365일 기준) <b>${comma(t.total/SUM_DAYS*365)}원</b>`
+      : '영업이익이 BEP(0원)를 넘어야 재원이 생깁니다.';
+    document.getElementById('miniTiers').innerHTML=[
+      ['#4FC2B4','1구간 0~5억 · 10%',t.t1],
+      ['#7FA1E8','2구간 5~10억 · 20%',t.t2],
+      ['#E8A75A','3구간 10억~ · 30%',t.t3]
+    ].map(([c,l,v])=>`<div class="mt"><i class="sw" style="background:${c}"></i>${l}<span class="amt num">${won(v)}</span></div>`).join('');
+
+    /* 누진 막대 */
+    const axisMax=Math.max(15e8, Math.ceil(Math.max(op,0)/B1)*B1);
+    const w=[B1/axisMax*100, B1/axisMax*100, (axisMax-B2)/axisMax*100];
+    const fr=[Math.min(t.a1/B1,1), Math.min(t.a2/B1,1), Math.min(t.a3/(axisMax-B2),1)];
+    ['b1','b2','b3'].forEach((id,i)=>{
+      const el=document.getElementById(id);
+      el.style.width=w[i].toFixed(3)+'%';
+      el.querySelector('.fill').style.width=(fr[i]*100).toFixed(2)+'%';
+      el.querySelector('.tag').style.color = fr[i]>0.45 ? '#fff' : ['#0c5f57','#1f3873','#8a4008'][i];
+    });
+    document.getElementById('axis').innerHTML=
+      `<span style="left:0">0</span>`+
+      `<span style="left:${w[0].toFixed(2)}%">5억</span>`+
+      `<span style="left:${(w[0]+w[1]).toFixed(2)}%">10억</span>`+
+      `<span style="left:100%;transform:translateX(-100%)">${won(axisMax)}</span>`;
+
+    document.getElementById('t1-v').textContent=won(t.t1);
+    document.getElementById('t2-v').textContent=won(t.t2);
+    document.getElementById('t3-v').textContent=won(t.t3);
+    document.getElementById('t1-m').style.width=(fr[0]*100).toFixed(1)+'%';
+    document.getElementById('t2-m').style.width=(fr[1]*100).toFixed(1)+'%';
+    document.getElementById('t3-m').style.width=(fr[2]*100).toFixed(1)+'%';
+    document.getElementById('t1-s').textContent='구간 소진 '+(fr[0]*100).toFixed(0)+'% · 최대 5,000만원';
+    document.getElementById('t2-s').textContent='구간 소진 '+(fr[1]*100).toFixed(0)+'% · 최대 1억원';
+    document.getElementById('t3-s').textContent= t.a3>0 ? '초과분 '+won(t.a3)+' × 30%' : '초과분 없음';
+
+    /* 표 합계 */
+    document.getElementById('f-rev').textContent=comma(rev);
+    document.getElementById('f-cost').textContent=comma(cost);
+    const fop=document.getElementById('f-op');
+    fop.textContent=comma(op); fop.className='num '+(op>0?'pos':op<0?'neg':'');
+    MONTHS.forEach(x=>{
+      const tr=rows.querySelector(`tr[data-k="${x.key}"]`); if(!tr) return;
+      const v=S[x.key].rev-S[x.key].cost, cell=tr.querySelector('[data-o]');
+      const empty=!S[x.key].rev&&!S[x.key].cost;
+      cell.textContent=empty?'—':comma(v);
+      cell.className='num '+(empty?'':v>0?'pos':v<0?'neg':'');
+      tr.classList.toggle('done',!!S[x.key].done);
+    });
+
+    drawChart();
+
+    /* 배분 */
+    const pool=t.total, per=SUM_DAYS>0?pool/SUM_DAYS:0;
+    document.getElementById('a-pool').textContent=won(pool);
+    document.getElementById('a-days').textContent=comma(SUM_DAYS)+'일';
+    document.getElementById('a-per').textContent=comma(per)+'원';
+    document.getElementById('a-cnt').textContent=MEMBERS.length+'명';
+    const maxShare=Math.max(...MEMBERS.map(m=>m.days))/SUM_DAYS;
+
+    allocBody.innerHTML=MEMBERS.map(m=>{
+      const share=m.days/SUM_DAYS, amt=per*m.days, tc=TEAM[m.team];
+      return `<tr>
+        <td><b>${m.en}</b> <span style="color:var(--ink-3);font-size:12px">${m.kr}</span>${m.isNew?'<span class="newbadge">신규</span>':''}</td>
+        <td style="text-align:left"><span class="chip" style="background:${tc.bg};color:${tc.c}">${m.team}</span></td>
+        <td style="text-align:left;color:var(--ink-2)" class="num">${m.join}</td>
+        <td class="num">${comma(m.days)}일</td>
+        <td class="num"><span class="sharebar"><i style="width:${(share/maxShare*100).toFixed(0)}%;background:${tc.c}"></i></span>${(share*100).toFixed(1)}%</td>
+        <td class="num" style="font-weight:700">${comma(amt)}원</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('al-days').textContent=comma(SUM_DAYS)+'일';
+    document.getElementById('al-pay').textContent=comma(pool)+'원';
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
