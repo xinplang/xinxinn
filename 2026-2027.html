@@ -249,7 +249,7 @@
         <span><i style="background:#d9d8d3"></i>미입력</span>
         <span style="color:var(--ink-3)">· 옅은 막대는 정산 미확정</span>
       </div>
-      <svg class="chart" id="chart" viewBox="0 0 760 210" preserveAspectRatio="xMidYMid meet" role="img" aria-label="월별 영업손익 막대 그래프"></svg>
+      <svg class="chart" id="chart" viewBox="0 0 760 232" preserveAspectRatio="xMidYMid meet" role="img" aria-label="월별 영업손익 막대 그래프"></svg>
     </div>
   </div>
 
@@ -392,14 +392,23 @@
   function drawChart(){
     const svg=document.getElementById('chart');
     while(svg.firstChild) svg.removeChild(svg.firstChild);
-    const W=760,H=210, padL=8,padR=8,padT=14,padB=26;
+    const W=760,H=232, padL=8,padR=8,padT=20,padB=34, LABEL=17, MINBAR=3;
     const vals=MONTHS.map(x=>({v:S[x.key].rev-S[x.key].cost, empty:!S[x.key].rev&&!S[x.key].cost, done:S[x.key].done, m:x.m}));
-    const maxP=Math.max(0,...vals.map(d=>d.v)), maxN=Math.min(0,...vals.map(d=>d.v));
+    const maxP=Math.max(0,...vals.map(d=>d.v));
+    const maxN=Math.min(0,...vals.map(d=>d.v));
     const span=Math.max(maxP-maxN,1);
     const plotH=H-padT-padB;
-    const zeroY=padT+plotH*(maxP/span);
-    const n=vals.length, slot=(W-padL-padR)/n, bw=Math.min(slot*0.56,36);
 
+    // 0선 위치 = 양수/음수 비율대로 분할
+    const posSpace=plotH*(maxP/span);
+    const negSpace=plotH-posSpace;
+    const zeroY=padT+posSpace;
+
+    // 라벨 자리를 먼저 뺀 뒤, 남은 높이에 맞춰 막대를 스케일
+    const posRoom=Math.max(posSpace-LABEL,0);
+    const negRoom=Math.max(negSpace-LABEL,0);
+
+    const n=vals.length, slot=(W-padL-padR)/n, bw=Math.min(slot*0.54,32);
     const mk=(t,a)=>{const e=document.createElementNS(svgNS,t); for(const k in a) e.setAttribute(k,a[k]); return e;};
 
     svg.appendChild(mk('line',{x1:padL,y1:zeroY,x2:W-padR,y2:zeroY,stroke:'#d2d1cc','stroke-width':1}));
@@ -407,21 +416,24 @@
     vals.forEach((d,i)=>{
       const cx=padL+slot*i+slot/2;
       if(d.empty){
-        svg.appendChild(mk('rect',{x:cx-bw/2,y:zeroY-5,width:bw,height:5,rx:2,fill:'#e2e1dc'}));
+        svg.appendChild(mk('rect',{x:cx-bw/2,y:zeroY-4,width:bw,height:4,rx:2,fill:'#e2e1dc'}));
       }else{
-        const hh=Math.max(Math.abs(d.v)/span*plotH,2);
         const up=d.v>=0;
+        const hh = d.v===0 ? MINBAR
+                 : up ? Math.max(d.v/maxP*posRoom,MINBAR)
+                      : Math.max(d.v/maxN*negRoom,MINBAR);
         const r=mk('rect',{x:cx-bw/2,y:up?zeroY-hh:zeroY,width:bw,height:hh,rx:3,
           fill:up?'#0d8a5c':'#cf4436','fill-opacity':d.done?1:0.42});
-        svg.appendChild(r);
-        const ti=document.createElementNS(svgNS,'title'); ti.textContent=d.m+'월 '+won(d.v)+(d.done?' (확정)':' (미확정)');
+        const ti=document.createElementNS(svgNS,'title');
+        ti.textContent=d.m+'월 '+won(d.v)+(d.done?' (확정)':' (미확정)');
         r.appendChild(ti);
-        const lb=mk('text',{x:cx,y:up?zeroY-hh-5:zeroY+hh+13,'text-anchor':'middle','font-size':'9.5',
-          fill:up?'#0d8a5c':'#cf4436','font-weight':'600'});
+        svg.appendChild(r);
+        const lb=mk('text',{x:cx,y:up?zeroY-hh-6:zeroY+hh+13,'text-anchor':'middle','font-size':'10',
+          fill:up?'#0d8a5c':'#cf4436','font-weight':'650'});
         lb.textContent=won(d.v).replace('원','');
         svg.appendChild(lb);
       }
-      const t=mk('text',{x:cx,y:H-8,'text-anchor':'middle','font-size':'10.5',fill:'#8b8983'});
+      const t=mk('text',{x:cx,y:H-9,'text-anchor':'middle','font-size':'10.5',fill:'#8b8983'});
       t.textContent=d.m+'월';
       svg.appendChild(t);
     });
