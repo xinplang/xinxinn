@@ -325,8 +325,12 @@
   for(let m=7;m<=12;m++) MONTHS.push({key:'2026-'+String(m).padStart(2,'0'),y:2026,m:m});
   for(let m=1;m<=6;m++)  MONTHS.push({key:'2027-'+String(m).padStart(2,'0'),y:2027,m:m});
 
-  const KEY='plang-incentive-2026h2-v1';
-  let S={}; MONTHS.forEach(x=>S[x.key]={rev:0,cost:0,done:false});
+  const KEY='plang-incentive-2026h2-v2';
+  const SEED={
+    '2026-07':{rev:123456789, cost:190000000, done:false},
+  };
+
+  let S={}; MONTHS.forEach(x=>S[x.key]=Object.assign({rev:0,cost:0,done:false}, SEED[x.key]||{}));
   try{const raw=localStorage.getItem(KEY); if(raw){const o=JSON.parse(raw);
     MONTHS.forEach(x=>{if(o[x.key]) S[x.key]=Object.assign(S[x.key],o[x.key]);});}}catch(e){}
   const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
@@ -384,8 +388,7 @@
   });
   document.getElementById('reset').addEventListener('click',()=>{
     if(!confirm('입력한 월별 금액을 모두 지웁니다. 계속할까요?')) return;
-    MONTHS.forEach(x=>S[x.key]={rev:0,cost:0,done:false}); save(); buildRows(); render();
-  });
+    MONTHS.forEach(x=>S[x.key]=Object.assign({rev:0,cost:0,done:false}, SEED[x.key]||{})); save(); buildRows(); render();  });
 
   /* 차트 */
   const svgNS='http://www.w3.org/2000/svg';
