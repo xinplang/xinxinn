@@ -552,7 +552,7 @@
            data-hint="회색으로 표시된 부분을 클릭해 바로 수정하세요. '합계'만 입력하면 공급가액·세액이 자동 계산돼요.">
     <div class="sheet">
       <img class="sheet-logo" data-logo alt="Plang">
-      <h2 class="doc-title">플랭스쿨 견적서</h2>
+      <h2 class="doc-title" contenteditable="true">플랭스쿨 견적서</h2>
 
       <div class="two-col">
         <div class="left">
@@ -657,7 +657,7 @@
            data-hint="회색으로 표시된 부분을 클릭해 바로 수정하세요. '합계'만 입력하면 공급가액·세액이 자동 계산돼요.">
     <div class="sheet">
       <img class="sheet-logo" data-logo alt="Plang">
-      <h2 class="doc-title tight">플랭스쿨 거래명세서</h2>
+      <h2 class="doc-title tight" contenteditable="true">플랭스쿨 거래명세서</h2>
 
       <div class="two-col">
         <div class="left">
@@ -780,7 +780,7 @@
            data-hint="회색으로 표시된 부분을 클릭해 바로 수정하세요. '금액'만 입력하면 공급가액·세액이 자동 계산돼요.">
     <div class="sheet">
       <img class="sheet-logo" data-logo alt="Plang">
-      <h2 class="doc-title tight">플랭스쿨 라이선스 납품확인서</h2>
+      <h2 class="doc-title tight" contenteditable="true">플랭스쿨 라이선스 납품확인서</h2>
 
       <table class="info grid4">
         <colgroup><col style="width:17%"><col style="width:33%"><col style="width:17%"><col style="width:33%"></colgroup>
@@ -1194,6 +1194,16 @@ document.querySelectorAll('.panel').forEach(function(panel){
 });
 fillToday();
 initLicenseSync();
+  /* ───────── 문서 제목 편집 ───────── */
+document.querySelectorAll('.doc-title[contenteditable]').forEach(function(h){
+  h.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); h.blur(); }
+  });
+  h.addEventListener('blur', function(){
+    if(!h.textContent.trim()) h.textContent = h.dataset.default;
+  });
+  h.dataset.default = h.textContent;
+});
 </script>
 
 </body>
