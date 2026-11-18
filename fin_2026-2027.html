@@ -325,11 +325,12 @@
   for(let m=7;m<=12;m++) MONTHS.push({key:'2026-'+String(m).padStart(2,'0'),y:2026,m:m});
   for(let m=1;m<=6;m++)  MONTHS.push({key:'2027-'+String(m).padStart(2,'0'),y:2027,m:m});
 
-  const KEY='plang-incentive-2026h2-v4';
+  const KEY='plang-incentive-2026h2-v5';
   const SEED={
-    '2026-07':{rev:60544940, cost:127749016, done:true},
-    '2026-08':{rev:63332923, cost:83345270, done:true},
-    '2026-09':{rev:63628568, cost:90542652, done:false},
+    '2026-07':{rev:60492035,  cost:127576416, done:true},
+    '2026-08':{rev:63141734,  cost:83683010,  done:true},
+    '2026-09':{rev:63366542,  cost:101336181, done:true},
+    '2026-10':{rev:67907966,  cost:90000000,  done:false},
   };
 
   let S={}; MONTHS.forEach(x=>S[x.key]=Object.assign({rev:0,cost:0,done:false}, SEED[x.key]||{}));
